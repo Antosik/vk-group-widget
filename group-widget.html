@@ -1,0 +1,110 @@
+<template>
+    <style>
+        #vk-groups-errors {
+            display: none;
+            padding: 20px;
+            background-color: palevioletred;
+            font-size: 16px;
+            color: darkred;
+        }
+    </style>
+    <div id="vk-groups">
+        <div id="vk-groups-errors"></div>
+    </div>
+</template>
+<script>
+  (function () {
+    'use strict';
+    let componentAttrs = {
+      'group-id': 20003922,
+      view: 'participants',   // 'news', 'name'
+      cover: 'true',            // false
+      width: 'auto',          // N
+      background: 'FFFFFF',   // hex color
+      text: '000000',         // hex color
+      button: '5E81A8',       // hex color
+    };
+    const componentDocument = document.currentScript.ownerDocument;
+    const componentTemplate = componentDocument.querySelector('template');
+    window.GroupWidget = class GroupWidget extends HTMLElement {
+      constructor() {
+        super();
+        this.appendChild(
+          document.importNode(componentTemplate.content, true)
+        );
+        this.groupBlock = this.querySelector('#vk-groups');
+        this.errorsBlock = this.querySelector('#vk-groups-errors');
+        this.groupID = this.getAttribute('group-id');
+      }
+
+      static get observedAttributes() {
+        return Object.keys(componentAttrs);
+      }
+
+      update() {
+        // cleaning
+        while (this.groupBlock.firstChild) {
+          this.groupBlock.removeChild(this.groupBlock.firstChild);
+        }
+
+        if (!window.VK) {
+          let script = document.createElement("script");
+          script.src = 'https://vk.com/js/api/openapi.js?146';
+          script.type = 'text/javascript';
+          script.onload = this.updateIFrame.bind(this);
+          script.onerror = this.handleErrors.bind(this);
+          this.appendChild(script);
+        } else {
+          this.updateIFrame();
+        }
+      }
+
+      handleErrors(error) {
+        this.errorsBlock.style.display = 'block';
+        this.errorsBlock.innerText = error;
+      }
+
+      updateIFrame() {
+        let mode = 3;
+        if (this.view === 'news') mode = 4;
+        else if (this.view === 'name') mode = 1;
+
+        const settings = {
+          mode,
+          no_cover: this.cover === 'false',
+          width: this.width,
+          color1: this.background,
+          color2: this.text,
+          color3: this.button
+        };
+
+        let script = document.createElement("script");
+        script.innerHTML = `VK.Widgets.Group("vk-groups", ${JSON.stringify(settings)}, ${this.groupId});`;
+        script.onerror = this.handleErrors.bind(this);
+        this.groupBlock.appendChild(script);
+      }
+
+      attributeChangedCallback() {
+        this.update();
+      }
+
+      connectedCallback() {
+        if (!this.groupID) this.handleErrors('No group id provided. Enter id of group in group-id attribute!');
+      }
+    };
+    Object.keys(componentAttrs).forEach(function (attr) {
+      let prop = attr.replace(/-([a-z])/g, function (match, letter) {
+        return letter.toUpperCase();
+      });
+      Object.defineProperty(GroupWidget.prototype, prop, {
+        get: function () {
+          return this.getAttribute(attr) || componentAttrs[attr];
+        },
+        set: function (value) {
+          this.setAttribute(attr, value || componentAttrs[attr]);
+        }
+      });
+    });
+    window.customElements.define('group-widget', GroupWidget);
+  })();
+</script>
