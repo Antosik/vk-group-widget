@@ -1,6 +1,10 @@
 ## VKontakte community widget
 built with [Web Components](https://www.webcomponents.org/)
 
+### [Demo](https://antosik.github.io/vk-group-widget/index.html)
+There are three widgets.  
+First one only with `group-id`, second with additional attributes and last one without provided attributes (shows error).
+
 ### Usage
 ```html
 <!-- Insert inside <head> tag -->
