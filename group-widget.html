@@ -1,6 +1,6 @@
 <template>
     <style>
-        #vk-groups-errors {
+        .vk-groups-errors {
             display: none;
             padding: 20px;
             background-color: palevioletred;
@@ -8,14 +8,12 @@
             color: darkred;
         }
     </style>
-    <div id="vk-groups"></div>
-    <div id="vk-groups-errors"></div>
 </template>
 <script>
   (function () {
     'use strict';
     let componentAttrs = {
-      'group-id': 20003922,     // Numberic group ID
+      'group-id': null,     // Numberic group ID
       view: 'participants',     // One of ['news', 'name', 'participants']
       cover: 'true',            // Show cover or not ['true', 'false']
       width: 'auto',            // Width of widget: 'auto' or N
@@ -27,14 +25,20 @@
     const componentTemplate = componentDocument.querySelector('template');
     window.GroupWidget = class GroupWidget extends HTMLElement {
       constructor() {
-        console.log('constr');
         super();
         this.appendChild(
           document.importNode(componentTemplate.content, true)
         );
-        this.groupBlock = this.querySelector('#vk-groups');
-        this.errorsBlock = this.querySelector('#vk-groups-errors');
         this.initialized = false;
+
+        this.groupBlock = document.createElement('div');
+        this.groupBlock.id = `vk-groups-${Math.random().toString(36).substring(7)}`;
+        this.appendChild(this.groupBlock);
+
+        this.errorsBlock = document.createElement('div');
+        this.errorsBlock.id = `${this.groupBlock.id}-errors`;
+        this.errorsBlock.className = 'vk-groups-errors';
+        this.appendChild(this.errorsBlock);
       }
 
       // List of widget attributes
@@ -56,6 +60,7 @@
 
       update() {
         const block = this.groupBlock;
+
         // cleaning
         while (block.firstChild) {
           block.removeChild(block.firstChild);
@@ -84,7 +89,7 @@
         };
 
         let script = document.createElement("script");
-        script.innerHTML = `VK.Widgets.Group("vk-groups", ${JSON.stringify(settings)}, ${this.groupId});`;
+        script.innerHTML = `VK.Widgets.Group("${this.groupBlock.id}", ${JSON.stringify(settings)}, ${this.groupId});`;
         script.onerror = this.handleErrors.bind(this);
         this.groupBlock.appendChild(script);
       }
@@ -98,7 +103,6 @@
 
       // Called every time the element is inserted into the DOM.
       connectedCallback() {
-        console.log('connect');
         if (!this.groupId) {
           this.handleErrors('No group id provided. Enter id of group in group-id attribute!');
         }
