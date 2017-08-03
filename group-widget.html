@@ -8,55 +8,60 @@
             color: darkred;
         }
     </style>
-    <div id="vk-groups">
-        <div id="vk-groups-errors"></div>
-    </div>
+    <div id="vk-groups"></div>
+    <div id="vk-groups-errors"></div>
 </template>
 <script>
   (function () {
     'use strict';
     let componentAttrs = {
-      'group-id': 20003922,
-      view: 'participants',   // 'news', 'name'
-      cover: 'true',            // false
-      width: 'auto',          // N
-      background: 'FFFFFF',   // hex color
-      text: '000000',         // hex color
-      button: '5E81A8',       // hex color
+      'group-id': 20003922,     // Numberic group ID
+      view: 'participants',     // One of ['news', 'name', 'participants']
+      cover: 'true',            // Show cover or not ['true', 'false']
+      width: 'auto',            // Width of widget: 'auto' or N
+      background: 'FFFFFF',     // Widget background color in hex
+      text: '000000',           // Widget text color in hex
+      button: '5E81A8',         // Widget header and button color in hex
     };
     const componentDocument = document.currentScript.ownerDocument;
     const componentTemplate = componentDocument.querySelector('template');
     window.GroupWidget = class GroupWidget extends HTMLElement {
       constructor() {
+        console.log('constr');
         super();
         this.appendChild(
           document.importNode(componentTemplate.content, true)
         );
         this.groupBlock = this.querySelector('#vk-groups');
         this.errorsBlock = this.querySelector('#vk-groups-errors');
-        this.groupID = this.getAttribute('group-id');
+        this.initialized = false;
       }
 
+      // List of widget attributes
       static get observedAttributes() {
         return Object.keys(componentAttrs);
       }
 
-      update() {
-        // cleaning
-        while (this.groupBlock.firstChild) {
-          this.groupBlock.removeChild(this.groupBlock.firstChild);
-        }
-
-        if (!window.VK) {
+      // Downloads VKApi script, if VK is not defined
+      downloadVKScript() {
+        return new Promise((resolve, reject) => {
           let script = document.createElement("script");
           script.src = 'https://vk.com/js/api/openapi.js?146';
           script.type = 'text/javascript';
-          script.onload = this.updateIFrame.bind(this);
-          script.onerror = this.handleErrors.bind(this);
+          script.onerror = reject;
+          script.onload = resolve;
           this.appendChild(script);
-        } else {
-          this.updateIFrame();
+        })
+      }
+
+      update() {
+        const block = this.groupBlock;
+        // cleaning
+        while (block.firstChild) {
+          block.removeChild(block.firstChild);
         }
+
+        this.updateIFrame();
       }
 
       handleErrors(error) {
@@ -84,14 +89,31 @@
         this.groupBlock.appendChild(script);
       }
 
+      // An attribute was added, removed, updated, or replaced.
       attributeChangedCallback() {
-        this.update();
+        if (this.initialized) {
+          this.update();
+        }
       }
 
+      // Called every time the element is inserted into the DOM.
       connectedCallback() {
-        if (!this.groupID) this.handleErrors('No group id provided. Enter id of group in group-id attribute!');
+        console.log('connect');
+        if (!this.groupId) {
+          this.handleErrors('No group id provided. Enter id of group in group-id attribute!');
+        }
+
+        if (!window.VK) {
+          this.downloadVKScript().then(this.updateIFrame.bind(this));
+        } else {
+          this.updateIFrame();
+        }
+
+        this.initialized = true;
       }
     };
+
+    // init properties
     Object.keys(componentAttrs).forEach(function (attr) {
       let prop = attr.replace(/-([a-z])/g, function (match, letter) {
         return letter.toUpperCase();
