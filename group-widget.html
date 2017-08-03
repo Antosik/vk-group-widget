@@ -21,6 +21,7 @@
       background: 'FFFFFF',     // Widget background color in hex
       text: '000000',           // Widget text color in hex
       button: '5E81A8',         // Widget header and button color in hex
+      wide: 'false'             // Wide mode for news view
     };
     const componentDocument = document.currentScript.ownerDocument;
     const componentTemplate = componentDocument.querySelector('template');
@@ -86,7 +87,8 @@
           width: this.width,
           color1: this.background,
           color2: this.text,
-          color3: this.button
+          color3: this.button,
+          wide: +(this.wide === 'true')
         };
 
         let script = document.createElement("script");

@@ -53,6 +53,12 @@
                 </select>
             </td>
         </tr>
+        <tr hidden id="wide-row">
+            <td>
+                <label for="wide">Расширенный режим / Wide mode</label>
+                <input type="checkbox" id="wide"/>
+            </td>
+        </tr>
         <tr>
             <td>
                 <label for="width">Ширина виджета / Widget width (auto / number of pixels)</label>
@@ -96,20 +102,40 @@
     'use strict';
     let vk = document.getElementById('vk');
     document.getElementById('group-id')
-      .addEventListener('change', () => vk['groupId'] = this.value);
+      .addEventListener('change', function () {
+        vk['groupId'] = this.value;
+      });
     document.getElementById('view')
-      .addEventListener('change', () => vk['view'] = this.value);
+      .addEventListener('change', function () {
+        vk['view'] = this.value;
+        document.getElementById('wide-row').hidden = (vk['view'] !== 'news');
+      });
+    document.getElementById('wide')
+      .addEventListener('change', function () {
+        vk['wide'] = this.checked.toString();
+      });
     document.getElementById('width')
-      .addEventListener('change', () => vk['width'] = this.value);
+      .addEventListener('change', function () {
+        vk['width'] = this.value;
+      });
     document.getElementById('cover')
-      .addEventListener('change', () => vk['cover'] = this.checked.toString());
+      .addEventListener('change', function () {
+        vk['cover'] = this.checked.toString();
+      });
     document.getElementById('background')
-      .addEventListener('change', (e) => vk['background'] = e.target.value.slice(1), false);
+      .addEventListener('change', function (e) {
+        vk['background'] = e.target.value.slice(1);
+      }, false);
     document.getElementById('text')
-      .addEventListener('change', (e) => vk['text'] = e.target.value.slice(1), false);
+      .addEventListener('change', function (e) {
+        vk['text'] = e.target.value.slice(1);
+      }, false);
     document.getElementById('button')
-      .addEventListener('change', (e) => vk['button'] = e.target.value.slice(1), false);
-  })();
+      .addEventListener('change', function (e) {
+        vk['button'] = e.target.value.slice(1);
+      }, false);
+  })
+  ();
 </script>
 </body>
 </html>
